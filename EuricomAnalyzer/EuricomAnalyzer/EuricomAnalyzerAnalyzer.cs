@@ -31,24 +31,36 @@ namespace EuricomAnalyzer
             context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
             context.EnableConcurrentExecution();
 
-            // TODO: Consider registering other actions that act on syntax instead of or in addition to symbols
-            // See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/Analyzer%20Actions%20Semantics.md for more information
-            context.RegisterSymbolAction(AnalyzeSymbol, SymbolKind.NamedType);
+            //// TODO: Consider registering other actions that act on syntax instead of or in addition to symbols
+            //// See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/Analyzer%20Actions%20Semantics.md for more information
+            //context.RegisterSymbolAction(AnalyzeSymbol, SymbolKind.);
+
+            context.RegisterSyntaxNodeAction(AnalyzeSymbol, SyntaxKind.SimpleMemberAccessExpression);
         }
 
-        private static void AnalyzeSymbol(SymbolAnalysisContext context)
+        private static void AnalyzeSymbol(SyntaxNodeAnalysisContext context)
         {
-            // TODO: Replace the following code with your own analysis, generating Diagnostic objects for any issues you find
-            var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
-
-            // Find just those named type symbols with names containing lowercase letters.
-            if (namedTypeSymbol.Name.ToCharArray().Any(char.IsLower))
+            if(context.Node is MemberAccessExpressionSyntax syntax
+                && syntax.Name.Identifier.Text == "Now"
+                && syntax.Expression is IdentifierNameSyntax expression
+                && expression.Identifier.Text == "DateTime")
             {
-                // For all such symbols, produce a diagnostic.
-                var diagnostic = Diagnostic.Create(Rule, namedTypeSymbol.Locations[0], namedTypeSymbol.Name);
-
+                var diagnostic = Diagnostic.Create(Rule, syntax.Name.GetLocation(), "Use UtcNow");
                 context.ReportDiagnostic(diagnostic);
             }
+            // TODO: Replace the following code with your own analysis, generating Diagnostic objects for any issues you find
+            //var propertySymbol = (IPropertySymbol)context.Symbol;
+
+            //// Find just those named type symbols with names containing lowercase letters.
+            //if (propertySymbol.Name == "Now")
+            //{
+            //    // For all such symbols, produce a diagnostic.
+            //    var diagnostic = Diagnostic.Create(Rule, propertySymbol.Locations[0], propertySymbol.Name);
+
+            //    context.ReportDiagnostic(diagnostic);
+            //}
+
+
         }
     }
 }

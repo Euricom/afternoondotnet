@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Threading.Tasks;
 using VerifyCS = EuricomAnalyzer.Test.CSharpCodeFixVerifier<
     EuricomAnalyzer.EuricomAnalyzerAnalyzer,
@@ -32,8 +33,10 @@ namespace EuricomAnalyzer.Test
 
     namespace ConsoleApplication1
     {
-        class {|#0:TypeName|}
+        class TypeName
         {   
+                public DateTime XNow { get; set; } = DateTime.{|#0:Now|};
+
         }
     }";
 
@@ -47,12 +50,14 @@ namespace EuricomAnalyzer.Test
 
     namespace ConsoleApplication1
     {
-        class TYPENAME
+        class TypeName
         {   
+                public DateTime XNow { get; set; } = DateTime.UtcNow;
+
         }
     }";
 
-            var expected = VerifyCS.Diagnostic("EuricomAnalyzer").WithLocation(0).WithArguments("TypeName");
+            var expected = VerifyCS.Diagnostic("EuricomAnalyzer").WithLocation(0).WithArguments("Use UtcNow");
             await VerifyCS.VerifyCodeFixAsync(test, expected, fixtest);
         }
     }
