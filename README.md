@@ -1,2 +1,2 @@
 # afternoondotnet
-Playground for afternoon dot net
+Playground for afternoon dot net.
