@@ -21,9 +21,11 @@ namespace EuricomAnalyzer.Test
 
         //Diagnostic and CodeFix both triggered and checked for
         [TestMethod]
-        public async Task TestMethod2()
+        [DataRow("DateTime")]
+        [DataRow("DateTimeOffset")]
+        public async Task TestMethod2(string typeName)
         {
-            var test = @"
+            var test = $@"
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -32,15 +34,15 @@ namespace EuricomAnalyzer.Test
     using System.Diagnostics;
 
     namespace ConsoleApplication1
-    {
+    {{
         class TypeName
-        {   
-                public DateTime XNow { get; set; } = DateTime.{|#0:Now|};
+        {{   
+                public {typeName} XNow {{ get; set; }} = {typeName}.{{|#0:Now|}};
 
-        }
-    }";
+        }}
+    }}";
 
-            var fixtest = @"
+            var fixtest = $@"
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -49,13 +51,103 @@ namespace EuricomAnalyzer.Test
     using System.Diagnostics;
 
     namespace ConsoleApplication1
-    {
+    {{
         class TypeName
-        {   
-                public DateTime XNow { get; set; } = DateTime.UtcNow;
+        {{   
+                public {typeName} XNow {{ get; set; }} = {typeName}.UtcNow;
 
+        }}
+    }}";
+
+            var expected = VerifyCS.Diagnostic("EuricomAnalyzer").WithLocation(0).WithArguments("Use UtcNow");
+            await VerifyCS.VerifyCodeFixAsync(test, expected, fixtest);
         }
-    }";
+
+        //Diagnostic and CodeFix both triggered and checked for
+        [TestMethod]
+        [DataRow("DateTime")]
+        [DataRow("DateTimeOffset")]
+        public async Task TestMethod3(string typeName)
+        {
+            var test = $@"
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Diagnostics;
+
+    namespace ConsoleApplication1
+    {{
+        class {typeName}
+        {{   
+            public System.{typeName} XNow {{ get; set; }} = System.{typeName}.{{|#0:Now|}};
+
+        }}
+    }}";
+
+            var fixtest = $@"
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Diagnostics;
+
+    namespace ConsoleApplication1
+    {{
+        class {typeName}
+        {{   
+            public System.{typeName} XNow {{ get; set; }} = System.{typeName}.UtcNow;
+
+        }}
+    }}";
+
+            var expected = VerifyCS.Diagnostic("EuricomAnalyzer").WithLocation(0).WithArguments("Use UtcNow");
+            await VerifyCS.VerifyCodeFixAsync(test, expected, fixtest);
+        }
+
+        //Diagnostic and CodeFix both triggered and checked for
+        [TestMethod]
+        [DataRow("DateTime")]
+        [DataRow("DateTimeOffset")]
+        public async Task TestMethod4(string typeName)
+        {
+            var test = $@"
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Diagnostics;
+    using Hidden = System.{typeName};
+
+    namespace ConsoleApplication1
+    {{
+        class {typeName}
+        {{   
+            public Hidden XNow {{ get; set; }} = Hidden.{{|#0:Now|}};
+
+        }}
+    }}";
+
+            var fixtest = $@"
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Diagnostics;
+    using Hidden = System.{typeName};
+
+    namespace ConsoleApplication1
+    {{
+        class {typeName}
+        {{   
+            public Hidden XNow {{ get; set; }} = Hidden.UtcNow;
+
+        }}
+    }}";
 
             var expected = VerifyCS.Diagnostic("EuricomAnalyzer").WithLocation(0).WithArguments("Use UtcNow");
             await VerifyCS.VerifyCodeFixAsync(test, expected, fixtest);
