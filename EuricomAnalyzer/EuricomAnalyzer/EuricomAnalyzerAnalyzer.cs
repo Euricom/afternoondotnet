@@ -40,13 +40,17 @@ namespace EuricomAnalyzer
 
         private static void AnalyzeSymbol(SyntaxNodeAnalysisContext context)
         {
-            if(context.Node is MemberAccessExpressionSyntax syntax
-                && syntax.Name.Identifier.Text == "Now"
-                && syntax.Expression is IdentifierNameSyntax expression
-                && expression.Identifier.Text == "DateTime")
+            if (context.Node is MemberAccessExpressionSyntax syntax
+                && syntax.Name.Identifier.Text == "Now")
             {
-                var diagnostic = Diagnostic.Create(Rule, syntax.Name.GetLocation(), "Use UtcNow");
-                context.ReportDiagnostic(diagnostic);
+                var model = context.SemanticModel.GetSymbolInfo(syntax.Expression);
+                if (model.Symbol is INamedTypeSymbol possibleDateTimeSymbol
+                    && (SymbolEqualityComparer.Default.Equals(possibleDateTimeSymbol, context.Compilation.GetTypeByMetadataName("System.DateTime"))
+                      || SymbolEqualityComparer.Default.Equals(possibleDateTimeSymbol, context.Compilation.GetTypeByMetadataName("System.DateTimeOffset"))))
+                {
+                    var diagnostic = Diagnostic.Create(Rule, syntax.Name.GetLocation(), "Use UtcNow");
+                    context.ReportDiagnostic(diagnostic);
+                }
             }
             // TODO: Replace the following code with your own analysis, generating Diagnostic objects for any issues you find
             //var propertySymbol = (IPropertySymbol)context.Symbol;
